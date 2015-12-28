@@ -1,4 +1,4 @@
-<?
+<?php
         class SimpleTpl
         {
             private $stack;
