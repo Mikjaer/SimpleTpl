@@ -95,7 +95,7 @@
                         switch ($keyword)
                         {
                             case "IF":
-                                if (preg_match('/[ ]*(\!)?[ ]*(.*?)[ ]*(==|!=|<|>)[ ]*(.*)/',$clause,$m))
+                                if (preg_match('/[ ]*(\!)?[ ]*(.*?)[ ]*(==|!=|<|>)[ ]*(.*)/',$clause,$m)) // IF $value == $value
                                 {
                                     $not = $m[1] == '!';
                                     $left = $this->intParseIdentifier($m[2]);
@@ -119,39 +119,47 @@
                                             break;
                                     }
                               
-                                    if ($not)
-                                        $res = ! $res;
-
-                                    if ($res)
-                                        $ifs[]=$res;
-
-                                    if (!$res)  // Clause failed, wee need to supress the content of the if-block
-                                    {
+                                } else if (preg_match('/(\!)?(.*)/',$clause,$m))   // IF $value
+                                {
+                                        $not = $m[1] == '!';
                                         
-                                        $current_level = count($ifs);
-                                        $ifs[]=$res;
-                                        
-                                        while (count($ifs) > $current_level)
-                                        {
-                                            $eip ++;
-                                            
-                                           if (preg_match('/{if/',$t[$eip]))    // One nested if found
-                                                $ifs[]=false;
-
-                                            if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
-                                                array_pop($ifs); 
-                                           
-                                            if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$eip])))    // Else ... let the loop handle the rest
-                                                break;
-                                    
-                                            if ($eip==count($t)) 
-                                                $this->runtimeError("Neverending if-sentence");
-                                        }
-
-                                    }
+                                        if ($this->intParseIdentifier($m[2]) != "")
+                                            $res = true;
+                                        else
+                                            $res = false;
                                 } else {
                                     $this->runtimeError("Malformed if statement");
                                 }
+                                    
+                                if ($not)
+                                    $res = ! $res;
+
+                                if ($res)
+                                    $ifs[]=$res;
+
+                                if (!$res)  // Clause failed, wee need to supress the content of the if-block
+                                {
+                                        
+                                    $current_level = count($ifs);
+                                    $ifs[]=$res;
+                                        
+                                    while (count($ifs) > $current_level)
+                                    {
+                                        $eip ++;
+                                            
+                                        if (preg_match('/{if/',$t[$eip]))    // One nested if found
+                                            $ifs[]=false;
+
+                                        if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
+                                            array_pop($ifs); 
+                                           
+                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$eip])))    // Else ... let the loop handle the rest
+                                            break;
+                                    
+                                        if ($eip==count($t)) 
+                                            $this->runtimeError("Neverending if-sentence");
+                                    }
+                                 }
                             break;
                             case "ELSE":
                                 $current_level = count($ifs) - 1;
