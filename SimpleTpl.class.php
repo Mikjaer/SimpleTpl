@@ -59,6 +59,18 @@
                 return $ret; 
             }
 
+            private function intParseIdentifier($identifier)
+            {
+                if (preg_match('/^[\'"](.*)[\'"]/', $identifier,$m))  // If we are given a constant i.e. "foobar" return it as is (without quotes)
+                    return $m[1];
+                if (is_numeric($identifier))
+                    return $identifier;
+                if ($identifier[0] == "$")
+                    return $this->intValue(substr($identifier,1));
+
+                $this->runtimeError("Unknown identifier: $identifier");
+            }
+
             private function intRender($tokkens)
             {
                 $t = $tokkens;
@@ -67,11 +79,102 @@
 
                 $loops = array();
 
+                $ifs = array();
+
                 $ret = array();
+
+                $suppress = false;
 
                 while ($eip < count($t))
                 {
-                    if (preg_match('/{([\/a-z]+)(.*)}/',$t[$eip],$m))    # Straight variable names
+                    if (preg_match('/{(if|\/if|fi|else)[ ]*(.*)}/i',$t[$eip],$m))    # if clause
+                    {
+                        $keyword = strtoupper($m[1]);
+                        $clause = $m[2];
+                        
+                        switch ($keyword)
+                        {
+                            case "IF":
+                                if (preg_match('/(.*?)[ ]*(==|!=|<|>)[ ]*(.*)/',$clause,$m))
+                                {
+                                    $left = $this->intParseIdentifier($m[1]);
+                                    $operator = $m[2];
+                                    $right = $this->intParseIdentifier($m[3]);
+
+                                    $res = false;
+                                    switch ($operator)
+                                    {
+                                        case "==":
+                                            $res = $left == $right;
+                                            break;
+                                        case "!=":
+                                            $res = $left != $right;
+                                            break;
+                                        case ">":
+                                            $res = $left > $right;
+                                            break;
+                                        case "<":
+                                            $res = $left < $right;
+                                            break;
+                                    }
+                               
+                                    if ($res)
+                                        $ifs[]=$res;
+
+                                    if (!$res)  // Clause failed, wee need to supress the content of the if-block
+                                    {
+                                        
+                                        $current_level = count($ifs);
+                                        $ifs[]=$res;
+                                        
+                                        while (count($ifs) > $current_level)
+                                        {
+                                            $eip ++;
+                                            
+                                           if (preg_match('/{if/',$t[$eip]))    // One nested if found
+                                                $ifs[]=false;
+
+                                            if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
+                                                array_pop($ifs); 
+                                           
+                                            if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$eip])))    // Else ... let the loop handle the rest
+                                                break;
+                                    
+                                            if ($eip==count($t)) 
+                                                $this->runtimeError("Neverending if-sentence");
+                                        }
+
+                                    }
+                                } else {
+                                    $this->runtimeError("Malformed if statement");
+                                }
+                            break;
+                            case "ELSE":
+                                $current_level = count($ifs) - 1;
+                                while (count($ifs) > $current_level)
+                                {
+                                    $eip ++;
+                                             
+                                    if (preg_match('/{if/',$t[$eip]))    // One nested if found
+                                        $ifs[]=false;
+
+                                    if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
+                                        array_pop($ifs); 
+
+                                    if ($eip==count($t)) 
+                                        $this->runtimeError("Neverending else-sentence");
+                                }
+                            break;
+                            case "/IF":
+                                if (count($ifs) > 0)
+                                    array_pop($ifs);
+                                else
+                                    $this->runtimeError("Parentless /if found");
+                            break;
+                        }
+                    }
+                    
+                    else if (preg_match('/{([\/a-z]+)(.*)}/',$t[$eip],$m))    # Straight variable names
                     {
                         $keyword = $m[1];
                         $params = $this->intParseParams($m[2]);
@@ -160,11 +263,13 @@
                     } else {
                     if (preg_match('/{\$(.+)}/',$t[$eip],$m))
                     {
-                        $ret[] = $this->intValue($m[1]);
-                }
-                else    
-                    $ret[] = $t[$eip];
-                }
+                        if (!$suppress)
+                            $ret[] = $this->intValue($m[1]);
+                    }
+                    else    
+                        if (!$suppress)
+                            $ret[] = $t[$eip];
+                    }
 
                 $eip++;
             }
