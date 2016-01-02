@@ -95,11 +95,12 @@
                         switch ($keyword)
                         {
                             case "IF":
-                                if (preg_match('/(.*?)[ ]*(==|!=|<|>)[ ]*(.*)/',$clause,$m))
+                                if (preg_match('/[ ]*(\!)?[ ]*(.*?)[ ]*(==|!=|<|>)[ ]*(.*)/',$clause,$m))
                                 {
-                                    $left = $this->intParseIdentifier($m[1]);
-                                    $operator = $m[2];
-                                    $right = $this->intParseIdentifier($m[3]);
+                                    $not = $m[1] == '!';
+                                    $left = $this->intParseIdentifier($m[2]);
+                                    $operator = $m[3];
+                                    $right = $this->intParseIdentifier($m[4]);
 
                                     $res = false;
                                     switch ($operator)
@@ -117,7 +118,10 @@
                                             $res = $left < $right;
                                             break;
                                     }
-                               
+                              
+                                    if ($not)
+                                        $res = ! $res;
+
                                     if ($res)
                                         $ifs[]=$res;
 
