@@ -276,12 +276,17 @@
             return $ret;
             }
 
+        public function render($tpl)
+        {
+            $tokkens = preg_split('/({.+?})/', $tpl , -1, PREG_SPLIT_DELIM_CAPTURE);
+            $tokkens = $this->intRender($tokkens);
+            
+            return implode($tokkens);
+        }
+
         public function fetch($tpl)
         {
-            $tokkens = preg_split('/({.+?})/', file_get_contents($tpl) , -1, PREG_SPLIT_DELIM_CAPTURE);
-            $tokkens = $this->intRender($tokkens);
-
-            return implode($tokkens);
+            return $this->render(file_get_contents($tpl));
         }
 
         public function display($tpl)
