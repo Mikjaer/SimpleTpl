@@ -35,7 +35,7 @@ to do some proper documentation, both regarding the definition of the
 language and the user-guide. Get in touch mikkel@mikjaer.com
 
 PHP End:
-
+<pre>
  $stpl = new SimpleTpl();
  $stpl->assign("title","This is a demonstration of");
 
@@ -93,3 +93,4 @@ Template End:
                 {if $a > $b)    Greater than
                 {if !$a == $b)  Not equal 
                 {if ! $a == $b) Not equal
+</pre>
