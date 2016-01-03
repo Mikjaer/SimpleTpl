@@ -87,11 +87,23 @@
 
                 while ($eip < count($t))
                 {
-                    if (preg_match('/{(if|\/if|fi|else)[ ]*(.*)}/i',$t[$eip],$m))    # if clause
+                    if (preg_match('/{(if|\/if|fi|elseif|else)[ ]*(.*)}/i',$t[$eip],$m))    # if clause
                     {
                         $keyword = strtoupper($m[1]);
                         $clause = $m[2];
                         
+                        if ($keyword == "ELSEIF")
+                        {
+                                if (count($ifs) > 0)            // Check if we are inside an if-structure
+                                    if ($ifs[count($ifs)-1])    // Have this structure allready had a hit
+                                        $keyword='ELSE';        // Then handover to else ... which will search for our /if
+                                    else    
+                                        $keyword='IF';          // If not handover to if 
+                                else
+                                    $this->runtimeError("Parentless /if found");
+                            }
+
+
                         switch ($keyword)
                         {
                             case "IF":
@@ -155,7 +167,10 @@
                                            
                                         if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$eip])))    // Else ... let the loop handle the rest
                                             break;
-                                    
+                                        
+                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{elseif/',$t[$eip+1])))    // If next tokken is an elseif, we handover to the loop 
+                                            break;
+                                        
                                         if ($eip==count($t)) 
                                             $this->runtimeError("Neverending if-sentence");
                                     }
