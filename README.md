@@ -62,7 +62,7 @@ Template End:
  Access array:  {$menuitem.url}
 
  Traverse array:{foreach name=loop loop=$menu}
-                    <a href="{$menu[$loop.index]}.url}">{$menu[$loop.index]}.name</a>
+                    &gt;a href="{$menu[$loop.index]}.url}">{$menu[$loop.index]}.name&gt;/a>
                 {/foreach}
 
  For loop:      {for name=forward start=1 stop=5}
