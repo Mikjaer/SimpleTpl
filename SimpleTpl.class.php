@@ -2,6 +2,14 @@
         class SimpleTpl
         {
             private $stack;
+            private $linenumber;
+
+            private $debug = false;
+
+            public function debug($debug)
+            {
+                $this->debug = $debug;
+            }
 
             public function append($key, $value)
             {
@@ -43,7 +51,11 @@
 
             private function runtimeError($error)
             {
-                die("ERROR: $error");
+                http_response_code(500);
+                if ($this->debug)
+                    die("SimpleTPL ERROR in line ".$this->linenumber[$this->eip]["line"]." in ".$this->filename.": $error");
+                else
+                    die("SimpleTPL Runtime error");
             }
 
             private function intParseParams($params)
@@ -75,7 +87,7 @@
             {
                 $t = $tokkens;
                 
-                $eip = 0;
+                $this->eip = 0;
 
                 $loops = array();
 
@@ -85,9 +97,9 @@
 
                 $suppress = false;
 
-                while ($eip < count($t))
+                while ($this->eip < count($t))
                 {
-                    if (preg_match('/{(if|\/if|fi|elseif|else)[ ]*(.*)}/i',$t[$eip],$m))    # if clause
+                    if (preg_match('/{(if|\/if|fi|elseif|else)[ ]*(.*)}/i',$t[$this->eip],$m))    # if clause
                     {
                         $keyword = strtoupper($m[1]);
                         $clause = $m[2];
@@ -157,21 +169,21 @@
                                         
                                     while (count($ifs) > $current_level)
                                     {
-                                        $eip ++;
+                                        $this->eip ++;
                                             
-                                        if (preg_match('/{if/',$t[$eip]))    // One nested if found
+                                        if (preg_match('/{if/',$t[$this->eip]))    // One nested if found
                                             $ifs[]=false;
 
-                                        if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
+                                        if (preg_match('/{\/if}/',$t[$this->eip]))    // If terminated
                                             array_pop($ifs); 
                                            
-                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$eip])))    // Else ... let the loop handle the rest
+                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{else}/',$t[$this->eip])))    // Else ... let the loop handle the rest
                                             break;
                                         
-                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{elseif/',$t[$eip+1])))    // If next tokken is an elseif, we handover to the loop 
+                                        if ((count($ifs)-1 == $current_level) and (preg_match('/{elseif/',$t[$this->eip+1])))    // If next tokken is an elseif, we handover to the loop 
                                             break;
                                         
-                                        if ($eip==count($t)) 
+                                        if ($this->eip==count($t)) 
                                             $this->runtimeError("Neverending if-sentence");
                                     }
                                  }
@@ -180,15 +192,15 @@
                                 $current_level = count($ifs) - 1;
                                 while (count($ifs) > $current_level)
                                 {
-                                    $eip ++;
+                                    $this->eip ++;
                                              
-                                    if (preg_match('/{if/',$t[$eip]))    // One nested if found
+                                    if (preg_match('/{if/',$t[$this->eip]))    // One nested if found
                                         $ifs[]=false;
 
-                                    if (preg_match('/{\/if}/',$t[$eip]))    // If terminated
+                                    if (preg_match('/{\/if}/',$t[$this->eip]))    // If terminated
                                         array_pop($ifs); 
 
-                                    if ($eip==count($t)) 
+                                    if ($this->eip==count($t)) 
                                         $this->runtimeError("Neverending else-sentence");
                                 }
                             break;
@@ -201,7 +213,7 @@
                         }
                     }
                     
-                    else if (preg_match('/{([\/a-z]+)(.*)}/',$t[$eip],$m))    # Straight variable names
+                    else if (preg_match('/{([\/a-z]+)(.*)}/',$t[$this->eip],$m))    # Straight variable names
                     {
                         $keyword = $m[1];
                         $params = $this->intParseParams($m[2]);
@@ -224,7 +236,7 @@
                             if (!isset($params["step"]))
                                     $loops[$name]["step"]=1; // If you do not supply a step value, asume 1
 
-                            $loops[$name]["eip"]=$eip; 
+                            $loops[$name]["eip"]=$this->eip; 
                             $loops[$name]["count"]=$params["start"]; 
                             $this->stack[$name] = $loops[$name];
                         }
@@ -238,7 +250,7 @@
                                 $loops[$name]["count"]=$loops[$name]["count"]+$loops[$name]["step"];
                 
                                 if ($loops[$name]["count"] <= $loops[$name]["stop"])
-                                    $eip = $loops[$name]["eip"];
+                                    $this->eip = $loops[$name]["eip"];
                                 else
                                     array_pop($loops);
                             } 
@@ -247,7 +259,7 @@
                                 $loops[$name]["count"]=$loops[$name]["count"]-$loops[$name]["step"]; 
                                 
                                 if ($loops[$name]["count"] >= $loops[$name]["stop"])
-                                    $eip = $loops[$name]["eip"];
+                                    $this->eip = $loops[$name]["eip"];
                                 else
                                     array_pop($loops);
                             }
@@ -274,7 +286,7 @@
                                 $loops[$name]["name"] = $name;
                                 $loops[$name]["loop"] = substr($params["loop"],1); 
                                 $loops[$name]["keys"] =array_keys($this->intValue($params["loop"]));
-                                $loops[$name]["eip"] =$eip; 
+                                $loops[$name]["eip"] =$this->eip; 
                             }
                             $loops[$name]["index"] = array_shift($loops[$name]["keys"])."\n";
                             $this->stack[$name] = $loops[$name];
@@ -284,28 +296,46 @@
                         {
                             $name = end($loops)["name"];
                             if (count($loops[$name]["keys"])!=0)
-                                $eip = $loops[$name]["eip"]-1;
+                                $this->eip = $loops[$name]["eip"]-1;
                         }
 
                     } else {
-                    if (preg_match('/{\$(.+)}/',$t[$eip],$m))
+                    if (preg_match('/{\$(.+)}/',$t[$this->eip],$m))
                     {
                         if (!$suppress)
                             $ret[] = $this->intValue($m[1]);
                     }
                     else    
                         if (!$suppress)
-                            $ret[] = $t[$eip];
+                            $ret[] = $t[$this->eip];
                     }
 
-                $eip++;
+                $this->eip++;
             }
             return $ret;
             }
 
         public function render($tpl)
         {
-            $tokkens = preg_split('/({.+?})/', $tpl , -1, PREG_SPLIT_DELIM_CAPTURE);
+            if (!$this->filename)
+                $this->filename="piped input";
+
+            if ($this->debug)
+            {     // Method 1, collects linenumbers for errormessages
+
+                foreach (split("\n",$tpl) as $num=>$line)
+                {
+                    foreach (preg_split('/({.+?})/', $line , -1, PREG_SPLIT_DELIM_CAPTURE) as $_)
+                    {
+                        $tokkens[]=$_;    
+                        $this->linenumber[count($tokkens)]=array("line"=>$num+1,"tokken"=>$_);
+                    }
+                }
+            } else {
+                // Method 2, might be faster
+
+                $tokkens = preg_split('/({.+?})/', $tpl , -1, PREG_SPLIT_DELIM_CAPTURE);
+            }
             $tokkens = $this->intRender($tokkens);
             
             return implode($tokkens);
@@ -313,6 +343,7 @@
 
         public function fetch($tpl)
         {
+            $this->filename = $tpl;
             return $this->render(file_get_contents($tpl));
         }
 
