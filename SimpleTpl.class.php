@@ -297,6 +297,8 @@
                             $name = end($loops)["name"];
                             if (count($loops[$name]["keys"])!=0)
                                 $this->eip = $loops[$name]["eip"]-1;
+                            else
+                                unset($loops[$name]);
                         }
 
                     } else {
