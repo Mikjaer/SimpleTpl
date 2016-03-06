@@ -43,7 +43,10 @@
                     }
                     else
                     {
-                        $current = $current[$tokken];
+                        if (isset($current[$tokken]))
+                            $current = $current[$tokken];
+                        else 
+                            $current = "";
                     }
                 }
                 return $current;
