@@ -29,7 +29,10 @@
             </tr>
         {/for}
         </table>
-  
+ 
+    {assign var=$test value="TEST"}
+    {$test}
+
     {$texts.copyright}
     </body>
 </html>
