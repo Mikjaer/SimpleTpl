@@ -1,7 +1,13 @@
 <?
-    include("SimpleTpl.class.php");
+    # Old non-composer way
+    # include("SimpleTpl.php");
+    # $smarty = new SimpleTpl();
+   
+    # First run: composer require mikjaer/simpletpl
 
-    $smarty = new SimpleTpl();
+    include("vendor/autoload.php");
+    $smarty = new Mikjaer\SimpleTpl\SimpleTpl();
+
     $smarty->assign("title","This is a demonstration of");
 
     $smarty->append("menu",array("name"=>"Citron",  "url"=>"http://www.citron.com"));

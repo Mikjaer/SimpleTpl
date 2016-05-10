@@ -8,7 +8,11 @@
 
     PHP End:
      
-     $stpl = new SimpleTpl();
+     Install: composer require mikjaer/simpletpl
+     
+     include("vendor/autoload.php");
+     $stpl = new \Mikjaer\SimpleTpl\SimpleTpl();
+
      $stpl->assign("title","This is a demonstration of");
 
      $stpl->append("menu",array("name"=>"Citron",  "url"=>"http://www.citron.com"));
