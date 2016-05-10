@@ -1,5 +1,6 @@
 <?php
-        class SimpleTpl
+	namespace Mikjaer\SimpleTpl;
+	class SimpleTpl
         {
             private $stack;
             private $linenumber;
