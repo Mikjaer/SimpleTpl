@@ -1,6 +1,6 @@
 {
-	"name":	"mikjaer/SimpleTpl",
-	"description": "A simple Smarty-like template engine",
+	"name":	"mikjaer/simpletpl",
+	"description": "SimpleTpl is a simple Smarty-like template engine",
 	"license": "GPLv2 / BSD",
 	"authors" : [
 		{
