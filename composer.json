@@ -1,0 +1,16 @@
+{
+	"name":	"mikjaer/SimpleTpl",
+	"description": "A simple Smarty-like template engine",
+	"license": "GPLv2 / BSD",
+	"authors" : [
+		{
+			"name": "Mikkel Mikjaer",
+			"email": "mikkel@mikjaer.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Mikjaer\\SimpleTpl": "src/"
+		}
+	}
+}
