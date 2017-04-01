@@ -69,3 +69,18 @@
                     {if $a > $b)    Greater than
                     {if !$a == $b)  Not equal 
                     {if ! $a == $b) Not equal
+
+
+    Assign value:   {assign var=$test value="This is a test"}
+                    {$test}
+		  
+    Foreach with assign:
+                    {foreach name=message loop=$messages}
+		      {assign var=$m value=$messages[$message.index]}
+		         <div class="message">
+		            <img src="/?profile={$m.from}" />
+		            <div class="text">{$m.text}</div>
+		            <div class="date">{$m.date}</div>
+                         </div>
+	            {/foreach}
+
