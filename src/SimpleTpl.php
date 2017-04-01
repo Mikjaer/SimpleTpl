@@ -65,8 +65,9 @@
             private function intParseParams($params)
             {
                 $ret = array();
-                preg_match_all("/([a-zA-Z]+)=([a-zA-Z0-9\$\.\[\]]+)/",$params,$matches);
-                if (count($matches[1])>0)
+                preg_match_all("/([a-zA-Z]+)=([\"a-zA-Z0-9\$\.\[\]]+)/",$params,$matches);
+                
+		if (count($matches[1])>0)
                     for ($i=0; $i<=count($matches); $i++)
                         if ((isset($matches[1][$i])) && (isset($matches[2][$i])))
                             $ret[$matches[1][$i]]=$matches[2][$i];
@@ -221,12 +222,10 @@
                     {
                         $keyword = $m[1];
                         $params = $this->intParseParams($m[2]);
-
                         if ($keyword == "assign")
                         {
-                            $val = $this->intParseIdentifier($params["value"]);
+			    $val = $this->intParseIdentifier($params["value"]);
                             $var = substr($params["var"],1);
-                        
                             $this->assign($var, $val);
                         }
 
