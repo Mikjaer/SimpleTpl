@@ -6,6 +6,8 @@
             private $linenumber;
 
             private $debug = false;
+                
+	    private $variable_name = '[0-9a-zA-Z_\$]+';
 
             public function debug($debug)
             {
@@ -29,9 +31,10 @@
      
             private function intValue($value)
             {
-                $tokkens = preg_split('/(\[[0-9a-z-A-Z\$\.]+\])|\.|\$?([0-9a-zA-Z\$]+)/', $value , -1, PREG_SPLIT_DELIM_CAPTURE + PREG_SPLIT_NO_EMPTY);
-                $current = $this->stack;
                 
+                $tokkens = preg_split('/(\[[0-9a-z-A-Z\$\.]+\])|\.|\$?('.$this->variable_name.')/', $value , -1, PREG_SPLIT_DELIM_CAPTURE + PREG_SPLIT_NO_EMPTY);
+                $current = $this->stack;
+
                 foreach ($tokkens as $tokken)
                 {
                     if (preg_match('/\[([0-9]+)\]/',$tokken,$m))
