@@ -65,6 +65,14 @@
                     die("SimpleTPL Runtime error");
             }
 
+            public function runtimeWarning($warning)
+            {
+                if ($this->debug)
+                    print("<strong>SimpleTPL WARNING</strong> in line ".$this->linenumber[$this->eip]["line"]." in ".$this->filename.": ".$warning."<br>");
+ 
+                error_log("SimpleTPL WARNING ".$this->filename." (".$this->linenumber[$this->eip]["line"]."): ". $warning);
+            }
+
             private function intParseParams($params)
             {
                 $ret = array();
@@ -299,11 +307,29 @@
 
                                 $loops[$name]["name"] = $name;
                                 $loops[$name]["loop"] = substr($params["loop"],1); 
-                                $loops[$name]["keys"] =array_keys($this->intValue($params["loop"]));
+                                
+                                if ( !is_array($this->intValue($params["loop"])))
+                                {
+                                    if (@$params["ignoreWarnings"] != "true")
+                                        $this->runtimeWarning("Warning, loop ".$loops[$name]["name"]." unknown variable ".$params["loop"]);
+                                    $loops[$name]["keys"] = array();
+                                }
+                                else 
+                                    $loops[$name]["keys"] =array_keys($this->intValue($params["loop"]));
+
                                 $loops[$name]["eip"] =$this->eip; 
                             }
-                            $loops[$name]["index"] = array_shift($loops[$name]["keys"])."\n";
-                            $this->stack[$name] = $loops[$name];
+                            if (!is_array($loops[$name]["keys"]))
+                            {
+                                if (@$params["ignoreWarnings"] != "true")
+                                    $this->runtimeWarning("Warning, loop ".$loops[$name]["name"]." input is not an array");
+                                $loops[$name]["index"] = false;
+                            }
+                            else
+                            {
+                                $loops[$name]["index"] = array_shift($loops[$name]["keys"])."\n";
+                            }
+                           $this->stack[$name] = $loops[$name];
                         }
 
                         if ($keyword == "/foreach")
@@ -339,7 +365,7 @@
             if ($this->debug)
             {     // Method 1, collects linenumbers for errormessages
 
-                foreach (split("\n",$tpl) as $num=>$line)
+                foreach (explode("\n",$tpl) as $num=>$line)
                 {
                     foreach (preg_split('/({.+?})/', $line , -1, PREG_SPLIT_DELIM_CAPTURE) as $_)
                     {
