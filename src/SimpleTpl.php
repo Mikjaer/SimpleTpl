@@ -69,7 +69,8 @@
             {
                 if ($this->debug)
                     print("<strong>SimpleTPL WARNING</strong> in line ".$this->linenumber[$this->eip]["line"]." in ".$this->filename.": ".$warning."<br>");
- 
+
+#print "<pre>"; print_r($this->linenumber); die();
                 error_log("SimpleTPL WARNING ".$this->filename." (".$this->linenumber[$this->eip]["line"]."): ". $warning);
             }
 
@@ -240,6 +241,12 @@
                             $this->assign($var, $val);
                         }
 
+                        if ($keyword == "enableDebugging")
+                            $this->debug(true);
+
+                        if ($keyword == "disableDebugging")
+                            $this->debug(false);
+
                         if ($keyword == "for")
                         {
                             if (!isset($params["name"]))
@@ -311,7 +318,7 @@
                                 if ( !is_array($this->intValue($params["loop"])))
                                 {
                                     if (@$params["ignoreWarnings"] != "true")
-                                        $this->runtimeWarning("Warning, loop ".$loops[$name]["name"]." unknown variable ".$params["loop"]);
+                                        $this->runtimeWarning("Unknown variable ".$params["loop"]." in loop '".$loops[$name]["name"]."'");
                                     $loops[$name]["keys"] = array();
                                 }
                                 else 
@@ -322,7 +329,7 @@
                             if (!is_array($loops[$name]["keys"]))
                             {
                                 if (@$params["ignoreWarnings"] != "true")
-                                    $this->runtimeWarning("Warning, loop ".$loops[$name]["name"]." input is not an array");
+                                    $this->runtimeWarning("Input is not an array ".$loops[$name]["name"]." in loop '".$loops[$name]["name"]."'");
                                 $loops[$name]["index"] = false;
                             }
                             else
@@ -362,22 +369,15 @@
             if (!$this->filename)
                 $this->filename="piped input";
 
-            if ($this->debug)
-            {     // Method 1, collects linenumbers for errormessages
-
-                foreach (explode("\n",$tpl) as $num=>$line)
+            foreach (explode("\n",$tpl) as $num=>$line)
+            {
+                foreach (preg_split('/({.+?})/', $line , -1, PREG_SPLIT_DELIM_CAPTURE) as $_)
                 {
-                    foreach (preg_split('/({.+?})/', $line , -1, PREG_SPLIT_DELIM_CAPTURE) as $_)
-                    {
-                        $tokkens[]=$_;    
-                        $this->linenumber[count($tokkens)]=array("line"=>$num+1,"tokken"=>$_);
-                    }
+                    $tokkens[]=$_;    
+                    $this->linenumber[count($tokkens)]=array("line"=>$num+1,"tokken"=>$_);
                 }
-            } else {
-                // Method 2, might be faster
-
-                $tokkens = preg_split('/({.+?})/', $tpl , -1, PREG_SPLIT_DELIM_CAPTURE);
             }
+            
             $tokkens = $this->intRender($tokkens);
             
             return implode($tokkens);
