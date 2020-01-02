@@ -380,7 +380,7 @@
             
             $tokkens = $this->intRender($tokkens);
             
-            return implode($tokkens);
+            return implode("\n",$tokkens);
         }
 
         public function fetch($tpl)
