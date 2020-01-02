@@ -371,12 +371,26 @@
 
             foreach (explode("\n",$tpl) as $num=>$line)
             {
+                $commands = $blanks = $other = false; 
                 foreach (preg_split('/({.+?})/', $line , -1, PREG_SPLIT_DELIM_CAPTURE) as $_)
                 {
                     $tokkens[]=$_;    
                     $this->linenumber[count($tokkens)]=array("line"=>$num+1,"tokken"=>$_);
+                    
+                    if (strlen($_) != 0)
+                    {
+                        if (($_[0] == "{") and ($_[1] != "$"))
+                            $commands = true;
+                        elseif ($_ == "")
+                            $blanks = true;
+                        else
+                            $other = true;
+                    }
                 }
-                $tokkens[]="\n";
+                
+                if ($other)
+                    $tokkens[]="\n";
+
             }
             
             $tokkens = $this->intRender($tokkens);
