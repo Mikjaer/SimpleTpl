@@ -376,11 +376,12 @@
                     $tokkens[]=$_;    
                     $this->linenumber[count($tokkens)]=array("line"=>$num+1,"tokken"=>$_);
                 }
+                $tokkens[]="\n";
             }
             
             $tokkens = $this->intRender($tokkens);
             
-            return implode("\n",$tokkens);
+            return implode($tokkens);
         }
 
         public function fetch($tpl)
