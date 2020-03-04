@@ -43,7 +43,7 @@
                     }
                     else if (preg_match('/\[(.+)\]/',$tokken,$m))
                     {
-                        $current = $current[intval($this->intValue($m[1]))];
+                        $current = @$current[intval($this->intValue($m[1]))];
                     }
                     else
                     {
@@ -379,7 +379,7 @@
                     
                     if (strlen($_) != 0)
                     {
-                        if (($_[0] == "{") and ($_[1] != "$"))
+                        if ((@$_[0] == "{") and (@$_[1] != "$"))
                             $commands = true;
                         elseif ($_ == "")
                             $blanks = true;
